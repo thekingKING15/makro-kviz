@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interaktivní kvízová hra</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #game-container { position: relative; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 500px; max-width: 95%; padding: 80px 20px 20px; text-align: center; }
+    #feedback { position: absolute; top: 10px; left: 0; right: 0; font-size: 2.5rem; font-weight: bold; color: #00aa00; display: none; }
+    #q-number { position: absolute; top: 60px; right: 15px; font-size: 1.2rem; }
+    #question { font-size: 1.3rem; margin: 50px 0 25px; font-weight: bold; }
+    #options { display: block; }
+    .option { background: #fff; border: 2px solid #000; padding: 15px; border-radius: 4px; cursor: pointer; transition: background 0.2s; text-align: left; font-size: 1.1rem; margin: 10px 0; }
+    .option:hover { background: #f0f0f0; }
+    .correct { background: #00ff00 !important; color: #000; }
+    .wrong { background: #ff0000 !important; border-color: #cc0000 !important; color: #000; }
+    #controls { margin-top: 20px; }
+    #prev-btn, #next-btn { padding: 10px 20px; font-size: 1rem; border: none; border-radius: 4px; margin: 0 5px; cursor: pointer; }
+    #prev-btn { background: #757575; color: #fff; }
+    #next-btn { background: #2196f3; color: #fff; }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="feedback"></div>
+    <div id="q-number"></div>
+    <div id="question"></div>
+    <div id="options"></div>
+    <div id="controls">
+      <button id="prev-btn">Zpět</button>
+      <button id="next-btn">Další</button>
+    </div>
+  </div>
+  <script>
+    const originalData = [
+      { question: "Kdo je autorem známého citátu \"Inflace je vždy a všude měnový jev\"?", options: ["M. Friedman", "J. M. Keynes", "A. Smith", "K. Marx"], answerText: "M. Friedman" },
+      { question: "Jaký je cíl restriktivní měnové politiky?", options: ["Zvýšit veřejné výdaje", "Zvýšit export", "Omezit inflaci a přehřátí ekonomiky", "Snížit nezaměstnanost"], answerText: "Omezit inflaci a přehřátí ekonomiky" },
+      { question: "Kolik činí ekonomicky aktivní obyvatelstvo (pracovní síla)?", options: ["7 100 tis.", "6 800 tis.", "7 500 tis.", "7 300 tis. (zaměstnanci + samostatně výděleční + nezaměstnaní)"], answerText: "7 300 tis. (zaměstnanci + samostatně výděleční + nezaměstnaní)" },
+      { question: "Kdy obvykle dochází ke zvýšení nezaměstnanosti?", options: ["Při růstu HDP", "Ve fázi expanze", "Ve fázi recese", "Při růstu investic"], answerText: "Ve fázi recese" },
+      { question: "Jaká je velikost peněžní zásoby vyjádřená agregátem M2?", options: ["1440 mld.", "14C2 mld. (vklady účt. + vklady term. + oběživo)", "920 mld.", "1480 mld."], answerText: "14C2 mld. (vklady účt. + vklady term. + oběživo)" },
+      { question: "Co je hlavním smyslem výpočtu HDP?", options: ["Měření ekonomického výkonu země", "Sledování míry inflace", "Zjištění důchodové nerovnosti", "Stanovení výše DPH"], answerText: "Měření ekonomického výkonu země" },
+      { question: "Mezi makroekonomické cíle nepatří:", options: ["Cenová stabilita", "Zvýšení zisku jednoho podniku", "Rovnováha v platební bilanci", "Ekonomický růst"], answerText: "Zvýšení zisku jednoho podniku" },
+      { question: "Jak se rozdělují veřejné rozpočty podle úrovně řízení?", options: ["Státní, krajské a obecní", "Investiční a neinvestiční", "Strukturované a nestrukturované", "Daňové a nedaňové"], answerText: "Státní, krajské a obecní" },
+      { question: "Která situace nastává při poklesu autonomních výdajů?", options: ["Multiplikátor se zvyšuje", "Potenciální produkt roste", "Rovnovážný výstup klesá", "Zvyšuje se AD"], answerText: "Rovnovážný výstup klesá" },
+      { question: "Co je \"centrální banka\"?", options: ["Instituce, která řídí měnovou politiku státu", "Banka, která poskytuje hypotéky", "Státní rozpočtová organizace", "Obchodní banka s největším ziskem"], answerText: "Instituce, která řídí měnovou politiku státu" }
+    ];
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    const quizData = originalData.map(item => {
+      const opts = [...item.options]; shuffle(opts);
+      return { question: item.question, options: opts, answer: opts.indexOf(item.answerText) };
+    }); shuffle(quizData);
+
+    let currentIndex = 0;
+    const total = quizData.length;
+
+    const feedbackEl = document.getElementById('feedback');
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const qNumberEl = document.getElementById('q-number');
+
+    function loadQuestion() {
+      feedbackEl.style.display = 'none';
+      clearState();
+      const q = quizData[currentIndex];
+      qNumberEl.textContent = `Otázka ${currentIndex + 1}/${total}`;
+      questionEl.textContent = `${currentIndex + 1}. ${q.question}`;
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('div');
+        btn.classList.add('option');
+        btn.textContent = `${String.fromCharCode(97 + idx)}) ${opt}`;
+        btn.addEventListener('click', () => selectOption(btn, idx));
+        optionsEl.appendChild(btn);
+      });
+      prevBtn.style.display = currentIndex > 0 ? 'inline-block' : 'none';
+    }
+
+    function clearState() {
+      nextBtn.style.display = 'none';
+      while (optionsEl.firstChild) optionsEl.removeChild(optionsEl.firstChild);
+    }
+
+    function selectOption(btn, idx) {
+      const correctIdx = quizData[currentIndex].answer;
+      if (idx === correctIdx) {
+        btn.classList.add('correct'); feedbackEl.textContent = 'SPRÁVNĚ'; feedbackEl.style.display = 'block';
+      } else {
+        btn.classList.add('wrong'); optionsEl.children[correctIdx].classList.add('correct');
+      }
+      Array.from(optionsEl.children).forEach(opt => opt.style.pointerEvents = 'none');
+      nextBtn.style.display = 'inline-block';
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (currentIndex > 0) { currentIndex--; loadQuestion(); }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentIndex < total - 1) { currentIndex++; loadQuestion(); }
+      else { feedbackEl.style.display = 'none'; questionEl.textContent = 'Kvíz dokončen!'; qNumberEl.textContent = ''; clearState(); prevBtn.style.display = 'none'; }
+    });
+
+    loadQuestion();
+  </script>
+</body>
+</html>
