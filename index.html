@@ -3,20 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interaktivní kvízová hra</title>
+  <title>MAKRO</title>
   <style>
     :root {
-      --bg-body: #f5f5f5;
-      --bg-container: #fff;
-      --color-text: #000;
-      --option-bg: #fff;
-      --option-border: #000;
-      --option-hover: #f0f0f0;
+      --bg-body: #121212;
+      --bg-container: #1e1e1e;
+      --color-text: #fff;
+      --option-bg: #2c2c2c;
+      --option-border: #fff;
+      --option-hover: #3a3a3a;
       --btn-bg: transparent;
-      --btn-border: #2196f3;
-      --btn-color: #2196f3;
-      --progress-bg: #ddd;
-      --progress-completed: #2196f3;
+      --btn-border: #fff;
+      --btn-color: #fff;
+      --progress-bg: #555;
+      --progress-completed: #90caf9;
+      --btn-active-bg: #2196f3;
+      --btn-active-color: #fff;
     }
     body {
       font-family: Arial, sans-serif;
@@ -49,7 +51,7 @@
       right: 0;
       font-size: 2.5rem;
       font-weight: bold;
-      color: #00aa00;
+      color: #a5d6a7;
       display: none;
     }
     /* Přesun nápisu Otázka x/… a ovládacích prvků doprostřed */
@@ -71,6 +73,10 @@
       padding: 2px;
       font-size: 1rem;
       text-align: center;
+      background: var(--option-bg);
+      color: var(--color-text);
+      border: 1px solid var(--option-border);
+      border-radius: 4px;
     }
     #jump-btn,
     #shuffle-btn,
@@ -110,17 +116,35 @@
       background: var(--option-hover);
     }
     .correct {
-      background: #00ff00 !important;
-      color: #000;
-      border-color: #00aa00 !important;
+      background: #4caf50 !important;
+      color: #fff;
+      border-color: #388e3c !important;
       animation: glow 0.8s ease-in-out;
     }
-    .wrong {
-      background: #ff0000 !important;
-      border-color: #cc0000 !important;
-      color: #000;
-      animation: shake 0.4s ease-in-out;
-    }
+
+    .wrong-item {
+  margin-bottom: 8px;
+  padding: 8px;
+  background: var(--option-bg);
+  border: 1px solid red;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background 0.2s;
+}
+.wrong-item:hover {
+  background: var(--option-hover);
+}
+
+
+.wrong {
+  background: #ff0000 !important;
+  border-color: #cc0000 !important;
+  color: #fff;
+  animation: shake 0.4s ease-in-out;
+}
+
+
     /* Animace pro špatnou odpověď (otřes) */
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
@@ -138,7 +162,7 @@
       display: flex;
       gap: 2px;
       margin-top: 15px;
-      height: 10px;
+      height: 20px; /* zvětšeno z původních 10px */
     }
     #progress-container .segment {
       flex: 1;
@@ -149,6 +173,18 @@
     #progress-container .segment.completed {
       background: var(--progress-completed);
     }
+
+    #score {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    #counts {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
 
     #controls {
       margin-top: 20px;
@@ -168,38 +204,38 @@
       transition: background 0.3s, color 0.3s, border-color 0.3s;
     }
 
-    /* DARK MODE STYLY */
-    body.dark-mode {
-      --bg-body: #121212;
-      --bg-container: #1e1e1e;
-      --color-text: #fff;
-      --option-bg: #2c2c2c;
-      --option-border: #fff;
-      --option-hover: #3a3a3a;
+    /* LIGHT MODE STYLY */
+    body.light-mode {
+      --bg-body: #f5f5f5;
+      --bg-container: #fff;
+      --color-text: #000;
+      --option-bg: #fff;
+      --option-border: #000;
+      --option-hover: #f0f0f0;
       --btn-bg: transparent;
-      --btn-border: #fff;
-      --btn-color: #fff;
-      --progress-bg: #555;
-      --progress-completed: #90caf9;
+      --btn-border: #2196f3;
+      --btn-color: #2196f3;
+      --progress-bg: #ddd;
+      --progress-completed: #2196f3;
     }
-    body.dark-mode #feedback {
-      color: #a5d6a7;
+    body.light-mode #feedback {
+      color: #00aa00;
     }
-    body.dark-mode .correct {
-      background: #4caf50 !important;
-      color: #fff;
-      border-color: #388e3c !important;
+    body.light-mode .correct {
+      background: #00ff00 !important;
+      color: #000;
+      border-color: #00aa00 !important;
     }
-    body.dark-mode .wrong {
-      background: #e57373 !important;
-      border-color: #d32f2f !important;
-      color: #fff;
+    body.light-mode .wrong {
+      background: #ff0000 !important;
+      border-color: #cc0000 !important;
+      color: #000;
     }
   </style>
 </head>
-<body>
+<body class="dark-mode">
   <div id="game-container">
-    <button id="theme-toggle">🌙</button>
+    <button id="theme-toggle">☀️</button>
     <div id="feedback"></div>
     <div id="q-controls">
       <div id="q-number"></div>
@@ -210,20 +246,27 @@
     <div id="question"></div>
     <div id="options"></div>
     <div id="progress-container"></div>
-    <div id="controls">
-      <button id="prev-btn">Zpět</button>
-      <button id="next-btn">Další</button>
-    </div>
-  </div>
+<div id="score">Skóre: 0/162</div>
+<div id="counts">
+  <span id="correct-count">SPRÁVNĚ: 0</span>
+  <button id="wrong-count" style="background: none; border: none; color: red; cursor: pointer; font-weight: bold;">ŠPATNĚ: 0</button>
+</div>
+<div id="wrong-list" style="display: none; margin-top: 10px;"></div>
+<div id="controls">
+  <button id="prev-btn">Zpět</button>
+  <button id="next-btn">Další</button>
+</div>
+
+
 
   <script>
     const STORAGE_KEY = 'quizDataOrder';
     const originalData = [
       { question: "Kdo je autorem známého citátu \"Inflace je vždy a všude měnový jev\"?", options: ["M. Friedman", "J. M. Keynes", "A. Smith", "K. Marx"], answerText: "M. Friedman" },
       { question: "Jaký je cíl restriktivní měnové politiky?", options: ["Zvýšit veřejné výdaje", "Zvýšit export", "Omezit inflaci a přehřátí ekonomiky", "Snížit nezaměstnanost"], answerText: "Omezit inflaci a přehřátí ekonomiky" },
-      { question: "Kolik činí ekonomicky aktivní obyvatelstvo (pracovní síla)?", options: ["7 100 tis.", "6 800 tis.", "7 500 tis.", "7 300 tis. (zaměstnanci + samostatně výděleční + nezaměstnaní)"], answerText: "7 300 tis. (zaměstnanci + samostatně výděleční + nezaměstnaní)" },
+      { question: "Předpokládejme, že známe tyto údaje z ekonomiky: Celkový počet obyvatel: 11 000 tis. Počet zaměstnanců: 4 600 tis. Počet nezaměstnaných (registrovaných): 400 tis. Počet samostatně výdělečných osob: 2 300 tis. Přirozená míra nezaměstnanosti: 6,5 %. Kolik činí ekonomicky aktivní obyvatelstvo (pracovní síla)?", options: ["7 100 tis.", "6 800 tis.", "7 500 tis.", "7 300 tis."], answerText: "7 300 tis." },
       { question: "Kdy obvykle dochází ke zvýšení nezaměstnanosti?", options: ["Při růstu HDP", "Ve fázi expanze", "Ve fázi recese", "Při růstu investic"], answerText: "Ve fázi recese" },
-      { question: "Jaká je velikost peněžní zásoby vyjádřená agregátem M2?", options: ["1440 mld.", "14C2 mld. (vklady účt. + vklady term. + oběživo)", "920 mld.", "1480 mld."], answerText: "14C2 mld. (vklady účt. + vklady term. + oběživo)" },
+      { question: "Předpokládejme hypotetickou ekonomiku. Bankovní rezervy: 70 mld. Vklady na běžných účtech: 450 mld. Termínované vklady: 920 mld. Oběživo: 82 mld. Jaká je velikost peněžní zásoby vyjádřená agregátem M2?", options: ["1 440 mld.", "1 422 mld.", "920 mld.", "1 480 mld."], answerText: "1 422 mld." },
       { question: "Co je hlavním smyslem výpočtu HDP?", options: ["Měření ekonomického výkonu země", "Sledování míry inflace", "Zjištění důchodové nerovnosti", "Stanovení výše DPH"], answerText: "Měření ekonomického výkonu země" },
       { question: "Mezi makroekonomické cíle nepatří:", options: ["Cenová stabilita", "Zvýšení zisku jednoho podniku", "Rovnováha v platební bilanci", "Ekonomický růst"], answerText: "Zvýšení zisku jednoho podniku" },
       { question: "Jak se rozdělují veřejné rozpočty podle úrovně řízení?", options: ["Státní, krajské a obecní", "Investiční a neinvestiční", "Strukturované a nestrukturované", "Daňové a nedaňové"], answerText: "Státní, krajské a obecní" },
@@ -234,13 +277,13 @@
       { question: "Jak se nazývá situace, kdy příjmy státu převyšují výdaje?", options: ["Fiskální deficit", "Monetární rovnováha", "Rozpočtová rovnováha", "Rozpočtový přebytek"], answerText: "Rozpočtový přebytek" },
       { question: "Který faktor může ovlivnit frekvenci a hloubku hospodářských cyklů?", options: ["Počet obyvatel", "Efektivita hospodářské politiky", "Úrovně mzdy", "Zahraniční obchod"], answerText: "Efektivita hospodářské politiky" },
       { question: "K čemu slouží státní rozpočet?", options: ["K evidenci devizových operací", "K financování činností státu a plnění jeho funkcí", "K evidenci obchodních transakcí", "K měření inflace"], answerText: "K financování činností státu a plnění jeho funkcí" },
-      { question: "Jaký je čistý domácí produkt (ČDP)?", options: ["650", "824", "1034", "1091"], answerText: "1034" },
+      { question: "Jaký je čistý domácí produkt (ČDP)? Spotřebitelské výdaje: 633, Vládní výdaje: 221, Hrubé investice: 1 033, Amortizace: 57, Export: 245, Import: 207, Přímé daně: 441, Transferové platby: 267", options: ["650", "824", "1 034", "1 091"], answerText: "1 034" },
       { question: "Co je hlavním cílem měnové politiky?", options: ["Zvýšit export", "Zajištění cenové stability", "Snížení vládních výdajů", "Zvýšení daní"], answerText: "Zajištění cenové stability" },
       { question: "Jaké riziko vzniká při příliš rychlé tvorbě peněz komerčními bankami?", options: ["Snížení zaměstnanosti", "Růst inflace", "Deflace", "Růst úspor"], answerText: "Růst inflace" },
       { question: "Jaká je hlavní příčina frikční nezaměstnanosti?", options: ["Strukturální změny v ekonomice", "Pokles agregátní poptávky", "Dobrovolná změna zaměstnání nebo vstup na trh práce", "Zánik průmyslových zón"], answerText: "Dobrovolná změna zaměstnání nebo vstup na trh práce" },
       { question: "Který z následujících je hlavní ukazatel inflace v ČR?", options: ["Index cen výrobců", "Index spotřebitelských cen (CPI)", "HDP deflátor", "Index průmyslu"], answerText: "Index spotřebitelských cen (CPI)" },
-      { question: "Jak vypadá funkce agregátních výdajů (AD)?", options: ["AD = 786 + 0,79Y", "AD = 1285 + 0,73Y", "AD = 1305 + 0,79Y", "AD = 499 + 0,79Y"], answerText: "AD = 1285 + 0,73Y" },
-      { question: "Pokud dochází k poklesu investic, výsledkem je:", options: ["Nárust SAS", "Růst AD", "Růst exportu", "Pokles AD a rovnovážného výstupu"], answerText: "Pokles AD a rovnovážného výstupu" },
+      { question: "Předpokládejme dvou sektorovou ekonomiku v modelu produkt-výdaje. Známe tyto údaje: Autonomní spotřeba: 510 mld. Kč, Mezní sklon ke spotřebě: 0,71, Hrubé soukromé investice: 786 mld. Kč. Jak vypadá funkce agregátních výdajů (AD)?", options: ["AD = 786 + 0,79Y", "AD = 1285 + 0,73Y", "AD = 1305 + 0,79Y", "AD = 499 + 0,79Y"], answerText: "AD = 1285 + 0,73Y" },
+      { question: "Pokud dochází k poklesu investic, výsledkem je:", options: ["Nárůst SAS", "Růst AD", "Růst exportu", "Pokles AD a rovnovážného výstupu"], answerText: "Pokles AD a rovnovážného výstupu" },
       { question: "Kdy nastává plná zaměstnanost?", options: ["Když je míra nezaměstnanosti pod 1 %", "Když nezaměstnanost odpovídá přirozené míře", "Když všichni mají práci", "Když stát garantuje práci"], answerText: "Když nezaměstnanost odpovídá přirozené míře" },
       { question: "Který faktor NEvede k posunu AD?", options: ["Změna důvěry spotřebitelů", "Změna exportu", "Změna investic", "Změna cenové hladiny"], answerText: "Změna cenové hladiny" },
       { question: "Co způsobí stagflaci v modelu AS-AD?", options: ["Pád cen", "Růst exportu", "Monetární expanze", "Negativní nabídkový šok"], answerText: "Negativní nabídkový šok" },
@@ -248,7 +291,140 @@
       { question: "Co může být důsledkem příliš restriktivní fiskální politiky?", options: ["Zvýšení inflace", "Růst nezaměstnanosti", "Pokles HDP", "Růst soukromé spotřeby"], answerText: "Růst nezaměstnanosti" },
       { question: "Který cíl nepatří mezi stabilizační funkce státu?", options: ["Cenová stabilita", "Růst HDP", "Zvýšení nerovnosti", "Vysoká zaměstnanost"], answerText: "Zvýšení nerovnosti" },
       { question: "Který z těchto typů nezaměstnanosti je způsoben pohybem pracovníků mezi zaměstnáními?", options: ["Frikční", "Strukturální", "Cyklická", "Skrytá"], answerText: "Frikční" },
-      { question: "Jaký dopad má zvýšení daní na agregátní poptávku?", options: ["Poptávka se zvyšuje", "Poptávka roste jen u exportérů", "Nemá žádný vliv", "Poptávka se snižuje"], answerText: "Poptávka se snižuje" }
+      { question: "Jaký dopad má zvýšení daní na agregátní poptávku?", options: ["Poptávka se zvyšuje", "Poptávka roste jen u exportérů", "Nemá žádný vliv", "Poptávka se snižuje"], answerText: "Poptávka se snižuje" },
+      { question: "Jak centrální banka obvykle reaguje na rostoucí inflaci?", options: ["Zvýšením úrokových sazeb", "Devalvací měny", "Zvýšením výdajů", "Snížením daní"], answerText: "Zvýšením úrokových sazeb" },
+      { question: "Co znamená „bankovní multiplikátor“?", options: ["Schopnost bank vytvářet peníze z vkladů", "Růst inflace v důsledku měnové expanze", "Zvýšení daní bankám", "Procento zisku centrální banky"], answerText: "Schopnost bank vytvářet peníze z vkladů" },
+      { question: "Jaký je cíl fiskální decentralizace?", options: ["Zrušit státní rozpočet", "Přenést rozpočtové pravomoci na nižší úrovně", "Zavést centrální daně", "Zajistit fiskální deficit"], answerText: "Přenést rozpočtové pravomoci na nižší úrovně" },
+      { question: "Co nastane, pokud AD klesne a AS zůstane neměnná?", options: ["AD a AS se posunou spolu", "HDP vzroste", "Cenová hladina se zvýší", "Rovnovážný výstup klesne a ceny klesnou"], answerText: "Rovnovážný výstup klesne a ceny klesnou" },
+      { question: "Jaká je velikost peněžní zásoby vyjádřené agregátem M1 při bankovních rezervách 40 mld., vkladech na běžných účtech 360 mld. a oběživu 86 mld.?", options: ["44C mld.", "452 mld.", "440 mld.", "880 mld."], answerText: "44C mld." },
+      { question: "Který z následujících faktorů NEovlivňuje potenciální produkt?", options: ["Vzdělání pracovní síly", "Technologický pokrok", "Dočasný výkyv poptávky", "Množství kapitálu"], answerText: "Dočasný výkyv poptávky" },
+      { question: "Jak fiskální politika ovlivňuje agregátní poptávku?", options: ["Změnami výdajů a daní", "Pomocí směnných kurzů", "Přes repo sazbu", "Skrze regulaci dovozu"], answerText: "Změnami výdajů a daní" },
+      { question: "Co je transmisní mechanismus měnové politiky?", options: ["Systém bankovní regulace", "Státní zásah do cen", "Systém regulace daní", "Proces, jak měnová politika ovlivňuje ekonomiku"], answerText: "Proces, jak měnová politika ovlivňuje ekonomiku" },
+      { question: "Co označuje pojem „potenciální produkt“?", options: ["HDP bez vládních výdajů", "Úroveň výstupu při plném využití zdrojů", "HDP očistěný o daně", "Export mínus import"], answerText: "Úroveň výstupu při plném využití zdrojů" },
+      { question: "Který z následujících ukazatelů je považován za makroekonomický?", options: ["Ceny elektřiny u ČEZ", "Prodejní cena automobilu", "Hrubý domácí produkt (HDP)", "Počet výrobků jednoho podniku"], answerText: "Hrubý domácí produkt (HDP)" },
+      { question: "V modelu AS-AD je rovnováha narušena, pokud:", options: ["Úroková míra je stabilní", "Nezaměstnanost klesá", "HDP stagnuje", "Dojde ke změně autonomních výdajů"], answerText: "Dojde ke změně autonomních výdajů" },
+      { question: "Co vyjadřuje míra nezaměstnanosti?", options: ["Podíl nezaměstnaných na pracovní sílu", "Podíl nezaměstnaných na počtu důchodců", "Počet nezaměstnaných děleno……", "Poměr nezaměstnaných k celkové populaci"], answerText: "Podíl nezaměstnaných na pracovní sílu" },
+      { question: "Co NEzpůsobí posun křivky agregátní poptávky?", options: ["Změna vládních investic", "Změna exportu", "Změna výdajů domácností", "Změna cenové hladiny"], answerText: "Změna cenové hladiny" },
+      { question: "Jaká je spotřeba C při rovnovážném produktu Y = 4560 mld. Kč, autonomní spotřebě 510 mld. Kč a mezním sklonu ke spotřebě 0,71?", options: ["3802", "3894", "4755", "3754"], answerText: "3754" },
+      { question: "Jak centrální banka ovlivňuje směnný kurz v režimu plovoucího kurzu?", options: ["Pomocí devizových intervencí", "Nemá žádný vliv", "Přímo ho stanovuje", "Změnami mezd"], answerText: "Pomocí devizových intervencí" },
+      { question: "Který prvek nepatří mezi základní funkce peněz?", options: ["Nástroj měnové politiky", "Uchovatel hodnoty", "Prostředek směny", "Zúčtovací jednotka"], answerText: "Nástroj měnové politiky" },
+      { question: "Který jev posune SAS křivku doprava?", options: ["Pokles nákladu firem", "Zvýšení cen energie", "Růst nominálních mezd", "Pokles investic"], answerText: "Pokles nákladu firem" },
+      { question: "Co znamená „reálný ekonomický růst“?", options: ["Zvýšení HDP očištěného o inflaci", "Pokles inflace", "Růst dovozu", "Zvýšení spotřeby domácností"], answerText: "Zvýšení HDP očištěného o inflaci" },
+      { question: "Která transakce nebude započtena do HDP?", options: ["Vlastní nákup obrněného vozu", "Nová výstavba rodinného domu", "Nákup nové výrobní linky", "Prodej ojetého automobilu"], answerText: "Prodej ojetého automobilu" },
+      { question: "Jaké výdaje tvoří složku G ve výdajové metodě?", options: ["Vývoz", "Investice firem", "Vládní nákupy statků a služeb", "Přímé daně"], answerText: "Vládní nákupy statků a služeb" },
+      { question: "Co označuje tzv. „nástroje nepřímé měnové politiky“?", options: ["Regulace státních výdajů", "Zákazy a limity", "Úrokové sazby, operace na volném trhu, povinné rezervy", "Přímé zdanění bank"], answerText: "Úrokové sazby, operace na volném trhu, povinné rezervy" },
+      { question: "Která instituce se podílí na tvorbě hospodářské politiky v ČR?", options: ["Akademie věd", "Nejvyšší soud", "Český rozhlas", "Ministerstvo financí"], answerText: "Ministerstvo financí" },
+      { question: "Co je „skrytá nezaměstnanost“?", options: ["Nezákonné zaměstnávání", "Nevyužití pracovního potenciálu při formálním zaměstnání", "Nezaznamenaná sezónní nezaměstnanost", "Nezaměstnanost v zahraničí"], answerText: "Nevyužití pracovního potenciálu při formálním zaměstnání" },
+      { question: "Který z těchto příkladů se započítá do HDP?", options: ["Neplacená práce v domácnosti", "Výhra v loterii", "Převod vlastnictví nemovitosti", "Nákup nové televize"], answerText: "Nákup nové televize" },
+      { question: "Co je typickým znakem fáze dna?", options: ["Vysoký růst HDP", "Vysoká inflace", "Nízký výkon ekonomiky a vysoká nezaměstnanost", "Přehřátí ekonomiky"], answerText: "Nízký výkon ekonomiky a vysoká nezaměstnanost" },
+      { question: "Jaký je typický účinek expanzivní měnové politiky?", options: ["Zvýšení devizových rezerv", "Podpora růstu ekonomiky a zaměstnanosti", "Pokles inflace", "Snížení mezd"], answerText: "Podpora růstu ekonomiky a zaměstnanosti" },
+      { question: "Co je typickým příkladem normativního tvrzení?", options: ["Míra nezaměstnanosti v ČR činí 3,8 %", "Růst inflace zpomaluje spotřebu", "HDP se zvýšil o 2 %", "Stát by měl více investovat do dopravy"], answerText: "Stát by měl více investovat do dopravy" },
+      { question: "Jaká je velikost peněžní základny při rezervách 38 mld. a oběživu 72 mld.?", options: ["72 mld.", "105 mld.", "110 mld.", "98 mld."], answerText: "110 mld." },
+      { question: "Kolik je ekonomicky neaktivních osob při 12 500 tis. obyvatel, 4 800 tis. zaměstnancích, 520 tis. nezaměstnaných a 2 400 tis. OSVČ?", options: ["4 780 tis.", "5 200 tis.", "4 800 tis.", "5 780 tis."], answerText: "4 780 tis." },
+      { question: "Který ukazatel není makroekonomický?", options: ["Zisk jedné firmy", "Obchodní bilance", "Míra inflace", "HDP"], answerText: "Zisk jedné firmy" },
+
+      { question: "Kdo může navrhnout změny ve státním rozpočtu během roku?", options: ["Vláda přes Ministerstvo financí", "Poslanci bez omezení", "Nejvyšší soud", "Prezident"], answerText: "Vláda přes Ministerstvo financí" },
+      { question: "Co označuje „inflační očekávání“?", options: ["Vnímání úrovně mezd", "Změnu devizových rezerv", "Očekávání veřejnosti ohledně budoucí inflace", "Současnou míru inflace"], answerText: "Očekávání veřejnosti ohledně budoucí inflace" },
+      { question: "Jaký je vztah mezi normální a reálnou úrokovou mírou v podmínkách inflace?", options: ["Reálná je vyšší než nominální", "Reálná = nominální – míra inflace", "Reálná = nominální × inflace", "Jsou vždy stejné"], answerText: "Reálná = nominální – míra inflace" },
+      { question: "Jaký je důsledek výdajové mezery v ekonomice?", options: ["Skutečný produkt je nižší než potenciální", "Rovnováha se nemění", "Ekonomika expanduje nad potenciál", "Spotřeba převyšuje investice"], answerText: "Skutečný produkt je nižší než potenciální" },
+      { question: "Co může být důsledkem cla na dovoz zboží?", options: ["Pokles cen pro spotřebitele", "Zvýšení ceny dovozového zboží", "Snížení inflace", "Růst exportu"], answerText: "Zvýšení ceny dovozového zboží" },
+      { question: "Která položka není součástí vládních výdajů ve výdajové metodě?", options: ["Platy státních zaměstnanců", "Výstavba dálnic", "Sociální dávky", "Nákup tanků"], answerText: "Sociální dávky" },
+      { question: "Co je fiskální deficit?", options: ["Přebytek veřejných financí", "Dluh veřejného sektoru", "Vyrovnaný rozpočet", "Situace, kdy výdaje státu převyšují jeho příjmy"], answerText: "Situace, kdy výdaje státu převyšují jeho příjmy" },
+      { question: "Jaký je čistý export (NX)? Spotřebitelské výdaje: 571, Vládní výdaje: 1 G3, Hrubé investice: 206, Amortizace: 68, Export: 18G, Import: 211, Přímé daně: 380, Transferové platby: 255.", options: ["0", "–22", "22", "–12"], answerText: "–22" },
+      { question: "Kdo je podle oficiální statistiky považován za nezaměstnaného?", options: ["Student denního studia", "Osoba bez práce, aktivně hledající zaměstnání a schopná nastoupit", "Osoba v důchodu", "Osoba pracující na dohodu"], answerText: "Osoba bez práce, aktivně hledající zaměstnání a schopná nastoupit" },
+      { question: "Která z následujících funkcí je základní funkcí peněz?", options: ["Zajišťování inflace", "Zdroje státních investic", "Prostředek směny", "Zajištění likvidity státního rozpočtu"], answerText: "Prostředek směny" },
+      { question: "Kdy se nejčastěji objevuje strukturální nezaměstnanost?", options: ["Při snížení výdajů domácností", "Během expanze", "Když je plná zaměstnanost", "Při nesouladu kvalifikací s potřebami trhu"], answerText: "Při nesouladu kvalifikací s potřebami trhu" },
+      { question: "Kdy dochází k expanzní mezeře v modelu AS-AD?", options: ["Nezaměstnanost je maximální", "HDP je nad potenciální úrovní", "HDP je pod potenciální úrovní", "Inflace je nulová"], answerText: "HDP je nad potenciální úrovní" },
+      { question: "Při pozitivním poptávkovém šoku dochází k:", options: ["Posunu SAS doleva", "Růstu HDP a inflace", "Poklesu cenové hladiny", "Recesi"], answerText: "Růstu HDP a inflace" },
+      { question: "Jaké období pokrývá státní rozpočet ČR?", options: ["Legislativní cyklus", "Kalendářní rok", "Fiskální kvartál", "3 roky"], answerText: "Kalendářní rok" },
+      { question: "Co je účelem pasivní poptávky zaměstnanosti?", options: ["Finanční podpora nezaměstnaných", "Podpora investic", "Snížení deficitu", "Zajištění rovnováhy na trhu práce"], answerText: "Finanční podpora nezaměstnaných" },
+      { question: "Co je hlavním motivem držby peněz podle Keynesovy teorie?", options: ["Tvorba rezerv centrální banky", "Inflace", "Spekulace s cennými papíry", "Transakční, opatrnostní a spekulační motiv"], answerText: "Transakční, opatrnostní a spekulační motiv" },
+      { question: "Který z následujících nástrojů je nástrojem měnové politiky?", options: ["Zavedení nových daní", "Změna úrokových sazeb", "Státní rozpočet", "Zvýšení důchodů"], answerText: "Změna úrokových sazeb" },
+      { question: "Pokud se zvýší spotřebitelská důvěra, jak zareaguje AD?", options: ["Změní se sklon", "Zůstane beze změny", "Posune se doprava", "Posune se doleva"], answerText: "Posune se doprava" },
+      { question: "Jaký je postoj klasické ekonomie k nezaměstnanosti?", options: ["Trh se přizpůsobí a nezaměstnanost je dočasná", "Vyžaduje zásah státu", "Je trvalým rysem kapitalismu", "Je důsledkem nadměrné nabídky peněz"], answerText: "Trh se přizpůsobí a nezaměstnanost je dočasná" },
+      { question: "Co je charakteristické pro fázi vrcholu hospodářského cyklu?", options: ["Deflace", "Maximální využití výrobních kapacit", "Nízká inflace", "Vysoká nezaměstnanost"], answerText: "Maximální využití výrobních kapacit" },
+      { question: "Co prosazovala keynesiánská ekonomie v době krize?", options: ["Omezení nabídky peněz", "Snížení daní a výdajů", "Aktivní státní zásahy a vládní výdaje ke stimulaci poptávky", "Volný trh bez regulací"], answerText: "Aktivní státní zásahy a vládní výdaje ke stimulaci poptávky" },
+      { question: "Co znamená „částečné bankovní rezervy“?", options: ["Banky drží jen část vkladů a zbytek půjčují", "Banky drží 100 % vkladů jako rezervy", "Banky financují pouze vlastní kapitál", "Banky drží rezervy ve zlatě"], answerText: "Banky drží jen část vkladů a zbytek půjčují" },
+      { question: "Jaký je rozdíl mezi běžným a kapitálovým výdajem státního rozpočtu?", options: ["Běžný výdaj je jednorázový", "Běžný výdaj je výdaj do budoucna", "Kapitálový výdaj je investiční (např. výstavba dálnice), běžný je provozní (např. platy)", "Kapitálový výdaj je mandatorní"], answerText: "Kapitálový výdaj je investiční (např. výstavba dálnice), běžný je provozní (např. platy)" },
+      { question: "Co je hlavní příčinou nákladové (cost-push) inflace?", options: ["Snížení daní", "Růst spotřebitelské důvěry", "Růst cen výrobních vstupů", "Pokles dovozu"], answerText: "Růst cen výrobních vstupů" },
+      { question: "Předpokládejme hypotetickou ekonomiku. Bankovní rezervy: 42 mld., Vklady na běžných účtech: 325 mld., Termínované vklady: 750 mld., Oběživo: 78 mld. Jaká je velikost peněžní zásoby vyjádřené agregátem M2?", options: ["1 130 mld.", "750 mld.", "1 125 mld.", "1 153 mld."], answerText: "1 153 mld." },
+      { question: "Co je hlavní charakteristikou restriktivní fiskální politiky?", options: ["Zvýšení investičních pobídek", "Snížení výdajů nebo zvýšení daní", "Růst transferových plateb", "Zvýšení spotřebitelských výdajů"], answerText: "Snížení výdajů nebo zvýšení daní" },
+      { question: "Multiplikátor výdajů popisuje:", options: ["Vliv změny autonomních výdajů na rovnovážný výstup", "Vývoj nabídky práce", "Změny v úrokových sazbách", "Růst cenové hladiny"], answerText: "Vliv změny autonomních výdajů na rovnovážný výstup" },
+      { question: "Jaký dopad má posílení domácí měny na export?", options: ["Export roste proporcionálně", "Export se zvyšuje", "Export se stává méně konkurenceschopným", "Export je stabilní"], answerText: "Export se stává méně konkurenceschopným" },
+      { question: "Který typ nezaměstnanosti vzniká při ekonomickém poklesu?", options: ["Frikční", "Cyklická", "Sezónní", "Dobrovolná"], answerText: "Cyklická" },
+      { question: "Jaký je hrubý domácí produkt (HDP)? Spotřebitelské výdaje: 687, Vládní výdaje: 1 G2, Hrubé investice: 173, Amortizace: 60, Export: 266, Import: 228, Přímé daně: 3 GG, Transferové platby: 276.", options: ["1 030", "814", "1 039", "691"], answerText: "1 030" },
+      { question: "Předpokládejme dvou sektorovou ekonomiku v modelu produkt-výdaje. Známe tyto údaje: Autonomní spotřeba: 434 mld. Kč, Mezní sklon ke spotřebě: 0,84, Hrubé soukromé investice: 745 mld. Kč, Vypočítejte úspory domácností při rovnovážném produktu Y = 736G mld. Kč. Výsledek zaokrouhlete na celá čísla.", options: ["1 255", "745", "1 065", "1 205"], answerText: "745" },
+      { question: "Jaký je přirozený důsledek výdajové mezery bez zásahu politiky?", options: ["Růst exportu", "Pokles nominálních mezd a posun SAS doprava", "Zvýšení AD", "Zvýšení spotřeby domácností"], answerText: "Pokles nominálních mezd a posun SAS doprava" },
+      { question: "Co patří mezi aktivní operace bank?", options: ["Poskytování úvěrů", "Vedení statistik", "Přijímání vkladů", "Emise hotovosti"], answerText: "Poskytování úvěrů" },
+      { question: "Co označuje pojem „konjunktura“ v hospodářském cyklu?", options: ["Dlouhodobou stagnaci", "Politickou nestabilitu", "Fázi růstu a prosperity", "Fázi poklesu"], answerText: "Fázi růstu a prosperity" },
+      { question: "Jak vláda reaguje na výdajovou mezeru v rámci fiskální politiky?", options: ["Zvýšením daní", "Snížením investic", "Posunem LAS", "Zvýšením výdajů nebo snížením daní"], answerText: "Zvýšením výdajů nebo snížením daní" },
+      { question: "Která z následujících sazeb je nejčastěji používaná ČNB k řízení měnové politiky?", options: ["Lombardní sazba", "Diskontní sazba", "2týdenní repo sazba", "Devizový kurz"], answerText: "2týdenní repo sazba" },
+      { question: "Co je typickým příkladem proticyklické fiskální politiky?", options: ["Zavedení nových celních poplatků", "Zvýšení výdajů během recese", "Snížení daní v době ekonomického růstu", "Zvyšování úrokových sazeb"], answerText: "Zvýšení výdajů během recese" },
+      { question: "Který růst je udržitelnější z dlouhodobého hlediska?", options: ["Extenzivní růst", "Intenzivní růst", "Spotřební růst", "Přechodný růst"], answerText: "Intenzivní růst" },
+      { question: "Kdy může dojít k tzv. inflační mezeře?", options: ["Při deflaci", "Když je skutečný HDP vyšší než potenciální", "Když je AD < SAS", "Při recesi"], answerText: "Když je skutečný HDP vyšší než potenciální" },
+      { question: "Normativní výrok je založen na:", options: ["Sběru dat", "Hodnotovém soudu", "Statistických údajích", "Pozorování reality"], answerText: "Hodnotovém soudu" },
+      { question: "Co patří mezi strukturální nástroje hospodářské politiky?", options: ["Inflace a nezaměstnanost", "Devizové intervence", "Tisk peněz", "Podpora výzkumu, vzdělávání a infrastruktury"], answerText: "Podpora výzkumu, vzdělávání a infrastruktury" },
+      { question: "Který z těchto nástrojů nepatří mezi přímé nástroje měnové politiky?", options: ["Úrokové sazby ECB", "Repo operace", "Úvěrové limity a přímé regulace úvěrů", "Změna daní"], answerText: "Úvěrové limity a přímé regulace úvěrů" },
+      { question: "Mezi příklad agregace patří:", options: ["Sečtení výdajů všech domácností", "Sleva v e-shopu", "Počet zaměstnanců v jedné firmě", "Výběr daně z přidané hodnoty"], answerText: "Sečtení výdajů všech domácností" },
+      { question: "Co způsobí horizontální SAS křivku v krátkém období?", options: ["Fixní ceny a mzdy", "Volný pohyb kapitálu", "Klesající produktivita", "Plná zaměstnanost"], answerText: "Fixní ceny a mzdy" },
+      { question: "Jaké riziko může přinést časté používání expanzivní fiskální politiky?", options: ["Snížení úrokových sazeb", "Dlouhodobá deflace", "Zvýšení veřejného dluhu a inflace", "Posílení měny"], answerText: "Zvýšení veřejného dluhu a inflace" },
+      { question: "Jaký je hrubý domácí produkt (HDP)? Spotřebitelské výdaje: 712, Vládní výdaje: 223, Hrubé investice: 1 G6, Amortizace: 61, Export: 258, Import: 17G, Přímé daně: 437, Transferové platby: 275.", options: ["1 210", "773", "1 229", "935"], answerText: "1 210" },
+      { question: "Co patří mezi automatické stabilizátory v ekonomice?", options: ["Centrální bankovní intervence", "Daňový systém a dávky v nezaměstnanosti", "Ovlivňování kurzu měny", "Repo operace"], answerText: "Daňový systém a dávky v nezaměstnanosti" },
+      { question: "Která sazba slouží jako spodní hranice úrokových sazeb na peněžním trhu?", options: ["Průměrná sazba hypoték", "Repo sazba", "Diskontní sazba", "Lombardní sazba"], answerText: "Diskontní sazba" },
+      { question: "Předpokládejme dvou sektorovou ekonomiku v modelu produkt-výdaje. Známe tyto údaje: Autonomní spotřeba: 413 mld. Kč, Mezní sklon ke spotřebě: 0,72, Hrubé soukromé investice: 804 mld. Kč, Vypočítejte úspory domácností při rovnovážném produktu Y = 4 346 mld. Kč. Výsledek zaokrouhlete na celá čísla.", options: ["413", "804", "4 346", "910"], answerText: "804" },
+      { question: "Jaký je dopad devalvace měny na export?", options: ["Nemá žádný vliv", "Zvyšuje konkurenceschopnost exportu", "Snižuje domácí ceny", "Snižuje konkurenceschopnost"], answerText: "Zvyšuje konkurenceschopnost exportu" },
+      { question: "Co znamená, pokud deflátor HDP > 100?", options: ["Dochází k poklesu cen", "Ekonomika stagnuje", "Zvyšuje se reálné HDP", "Cenová hladina vzrostla"], answerText: "Cenová hladina vzrostla" },
+      { question: "Jaké fáze zahrnuje hospodářský cyklus?", options: ["Expanze, vrchol, recese, dno", "Růst, pokles, rovnováha", "Inflace, nezaměstnanost, deflace", "Úpadek, stabilizace, vývoj"], answerText: "Expanze, vrchol, recese, dno" },
+      { question: "Co patří mezi tzv. M1 peněžní agregát?", options: ["Devizové rezervy ČNB", "Dlouhodobé úvěry", "Hypotéky a státní dluhopisy", "Oběživo a vklady na viděnou"], answerText: "Oběživo a vklady na viděnou" },
+      { question: "Předpokládejme hypotetickou ekonomiku. Bankovní rezervy: 33 mld., Vklady na běžných účtech: 320 mld., Termínované vklady: 740 mld., Oběživo: 80 mld. Jaká je velikost peněžní zásoby vyjádřené agregátem M1?", options: ["403 mld.", "320 mld.", "429 mld.", "389 mld."], answerText: "403 mld." },
+      { question: "Co je mezibankovní trh?", options: ["Místo, kde se nakupují nemovitosti", "Zahraniční burza", "Trh, na kterém si banky navzájem půjčují peníze", "Trh mezi spotřebiteli a bankami"], answerText: "Trh, na kterém si banky navzájem půjčují peníze" },
+      { question: "Co označuje pojem nezaměstnanost?", options: ["Stav, kdy lidé aktivně hledají práci, ale nemohou ji najít", "Zaměstnání na částečný úvazek", "Práci v šedé ekonomice", "Situaci, kdy lidé nepracují z vlastní vůle"], answerText: "Stav, kdy lidé aktivně hledají práci, ale nemohou ji najít" },
+      { question: "Co platí o krátké rovnováze v modelu AS-AD?", options: ["Může se lišit od dlouhodobé rovnováhy", "Je vždy spojená s inflací", "Nemůže nastat, pokud AD klesne", "Nastává pouze při plné zaměstnanosti"], answerText: "Může se lišit od dlouhodobé rovnováhy" },
+      { question: "Co je fiskální odpovědnost?", options: ["Daňová progrese", "Schopnost státu hospodařit udržitelně a efektivně", "Odmítnutí deficitu", "Odmítnutí výdajů"], answerText: "Schopnost státu hospodařit udržitelně a efektivně" },
+      { question: "Který výrok nejlépe vystihuje důchodovou metodu výpočtu HDP?", options: ["Výdaje na konečnou spotřebu", "Odpisy a reinvestice", "Započítání dovozu a vývozu", "Součet všech důchodů výrobních faktorů"], answerText: "Součet všech důchodů výrobních faktorů" },
+      { question: "Co platí pro rovnovážný produkt v modelu výdajů a výstupu?", options: ["Je vždy větší než potenciální", "Nastává tam, kde plánované výdaje = skutečný výstup", "Není ovlivněn daněmi", "Závisí pouze na úsporách"], answerText: "Nastává tam, kde plánované výdaje = skutečný výstup" },
+      { question: "Co z následujícího je makroekonomickým ukazatelem?", options: ["Počet zákazníků v e-shopu", "Roční příjem jedné firmy", "Míra nezaměstnanosti", "Ceny v supermarketu"], answerText: "Míra nezaměstnanosti" },
+      { question: "Co může způsobit negativní nabídkový šok během expanze?", options: ["Prudké zdražení surovin", "Růst exportu", "Růst produktivity", "Pokles úrokových sazeb"], answerText: "Prudké zdražení surovin" },
+      { question: "Jak se nazývá síla, kterou inflace snižuje kupní sílu peněz?", options: ["Index produkce", "Efektivní sazba", "Nominální úroková míra", "Reálná hodnota peněz"], answerText: "Reálná hodnota peněz" },
+      { question: "Která měnová politika stimuluje agregátní poptávku?", options: ["Expanzivní", "Protekcionismus", "Restriktivní", "Monetární neutralita"], answerText: "Expanzivní" },
+      { question: "Co znamená pojem „sociální stát“?", options: ["Země s volným trhem", "Stát, který zajišťuje občanům sociální zabezpečení", "Stát bez daní", "Stát s nízkou nezaměstnaností"], answerText: "Stát, který zajišťuje občanům sociální zabezpečení" },
+      { question: "Co z následujícího odpovídá principům klasické školy?", options: ["Trh je nestabilní a potřebuje zásahy", "Fiskální politika je základním nástrojem", "Trh má samoregulační schopnosti", "Stát musí stabilizovat poptávku"], answerText: "Trh má samoregulační schopnosti" },
+      { question: "Co je nejčastější příčinou recese?", options: ["Růst investic", "Pokles agregátní poptávky", "Technologický pokrok", "Snížení nezaměstnanosti"], answerText: "Pokles agregátní poptávky" },
+      { question: "Co je úvěrová expanze?", options: ["Rychlý růst poskytovaných úvěrů bankami", "Omezení objemu úvěrů", "Zavedení daně z úvěru", "Snížení úroků"], answerText: "Rychlý růst poskytovaných úvěrů bankami" },
+      { question: "Který výdaj je typickým výdajem běžného rozpočtu?", options: ["Výdaje na opravy dálnic", "Platy státních zaměstnanců", "Nákup zbraní", "Investiční granty"], answerText: "Platy státních zaměstnanců" },
+      { question: "Co je tzv. celní kvóta?", options: ["Daň z vývozu", "Množství omezení dovozu zboží", "Maximální cena dovozu?", "Pokuta za nelegální dovoz"], answerText: "Množství omezení dovozu zboží" },
+      { question: "Při výpočtu reálného HDP používáme:", options: ["Ceny v základním období", "Amortizace", "Odhad deficitu", "Běžné ceny roku"], answerText: "Ceny v základním období" },
+      { question: "Který přístup předpokládá pružnost mezd a cen a samoregulaci trhu?", options: ["Keynesiánský", "Monetaristický", "Klasický", "Behaviorální"], answerText: "Klasický" },
+      { question: "Kdy je ekonomika v makroekonomické rovnováze?", options: ["Když je nezaměstnanost nízká", "Když ceny nerostou", "Když se agregátní nabídka rovná agregátní poptávce", "Když AD roste rychleji než HDP"], answerText: "Když se agregátní nabídka rovná agregátní poptávce" },
+      { question: "Jaký je rozdíl mezi recesí a depresí?", options: ["Recese trvá déle", "Deprese je růstová fáze", "Deprese je hlubší a delší než recese", "Recese znamená inflaci"], answerText: "Deprese je hlubší a delší než recese" },
+      { question: "Která metoda výpočtu HDP zohledňuje spotřebu, investice, vládní výdaje a čistý export?", options: ["Výrobní", "Důchodová", "Výdajová", "Bilance"], answerText: "Výdajová" },
+      { question: "Jak centrální banka ovlivní ekonomiku při inflaci?", options: ["Zavede nové poplatky", "Sníží daně", "Zvýší výdaje vlády", "Zvýší úrokové sazby"], answerText: "Zvýší úrokové sazby" },
+      { question: "Co je typickým znakem inflační mezery?", options: ["Ceny klesají", "Nezaměstnanost roste", "HDP je nižší než potenciální", "Skutečný výstup přesahuje potenciál ekonomiky"], answerText: "Skutečný výstup přesahuje potenciál ekonomiky" },
+      { question: "Co je typickým znakem expanzivní měnové politiky?", options: ["Zpevnění kurzu", "Snížení úrokových sazeb", "Pokles objemu peněz", "Zvyšování úrokových sazeb"], answerText: "Snížení úrokových sazeb" },
+      { question: "Co způsobuje poptávkovou inflaci?", options: ["Pokles nabídky peněz", "Přebytek agregátní poptávky nad nabídkou", "X", "X"], answerText: "Přebytek agregátní poptávky nad nabídkou" },
+      { question: "Předpokládejme dvou sektorovou ekonomiku v modelu produkt-výdaje. Známe tyto údaje: Autonomní spotřeba: 501 mld. Kč, Mezní sklon ke spotřebě: 0,75; Hrubé soukromé investice: 720 mld. Kč. Jaký je rovnovážný produkt Y? Výsledek zaokrouhlete na celá čísla.", options: ["729", "4 320", "4 919", "4 725"], answerText: "4 320" },
+      { question: "Jaký vliv má restriktivní fiskální politika na rozpočtový schodek?", options: ["Zvyšuje schodek", "Zvyšuje výdaje", "Nemění schodek", "Snižuje schodek"], answerText: "Snižuje schodek" },
+      { question: "Nominální HDP může růst i bez skutečného růstu produkce, pokud:", options: ["Roste export", "Klesá import", "Klesá nezaměstnanost", "Rostou ceny"], answerText: "Rostou ceny" },
+      { question: "Jaký je rozdíl mezi cyklickou a strukturální nezaměstnaností?", options: ["Cyklická souvisí s fázemi cyklu, strukturální s nesouladem kvalifikací", "Strukturální vzniká jen při inflaci", "Cyklická nezaměstnanost je trvalá", "Strukturální je krátkodobá"], answerText: "Cyklická souvisí s fázemi cyklu, strukturální s nesouladem kvalifikací" },
+      { question: "Jaký je základní princip veřejných financí?", options: ["Přerozdělování zdrojů", "Ovlivňování cen", "Zvyšování daní", "Stabilizace měny"], answerText: "Přerozdělování zdrojů" },
+      { question: "Při růstu nominálního HDP, ale současném poklesu reálného HDP dochází k:", options: ["Vyrovnané bilanci", "Reálnému růstu", "Inflaci", "Recesi"], answerText: "Inflaci" },
+      { question: "Co znamená, že AD křivka je klesající?", options: ["Křivka nabídky reaguje na ceny", "Vyšší ceny zvyšují reálné bohatství", "Vyšší ceny snižují celkovou poptávku", "Nízké ceny snižují výdaje"], answerText: "Vyšší ceny snižují celkovou poptávku" },
+      { question: "Předpokládejme dvou sektorovou ekonomiku v modelu produkt-výdaje. Známe tyto údaje: Autonomní spotřeba: 471 mld. Kč, Mezní sklon ke spotřebě: 0,67, Hrubé soukromé investice: 718 mld. Kč, Vypočítejte spotřebu C při rovnovážném produktu Y = 3603 mld. Kč. Výsledek zaokrouhlete na celá čísla.", options: ["718", "2912", "471", "2885"], answerText: "2885" },
+      { question: "Jaký přístup tvrdí, že trh se sám reguluje bez zásahu státu?", options: ["Klasický", "Strukturální", "Monetární", "Keynesiánský"], answerText: "Klasický" },
+      { question: "Co patří mezi hotovostní peníze?", options: ["Státní dluhopisy", "Cenné papíry", "Bezhotovostní úvěry", "Bankovky a mince"], answerText: "Bankovky a mince" },
+      { question: "Jak vznikají tzv. skripturální peníze?", options: ["Tiskem bankovek", "Devizovou intervencí", "Ražbou mincí", "Zápisem na bankovní účet"], answerText: "Zápisem na bankovní účet" },
+      { question: "Co je základní rozdíl mezi fiskální a měnovou politikou?", options: ["Fiskální reguluje měnu", "Měnová ovlivňuje daně", "Obě mají stejný cíl i nástroj", "Fiskální pracuje s daněmi a výdaji, měnová s úroky a penězi"], answerText: "Fiskální pracuje s daněmi a výdaji, měnová s úroky a penězi" },
+      { question: "Co znamená inflační cíl?", options: ["Průměrný růst HDP", "Maximální dovolený schodek státního rozpočtu", "Požadovaná míra inflace, kterou se centrální banka snaží udržet", "Horní hranice nezaměstnanosti"], answerText: "Požadovaná míra inflace, kterou se centrální banka snaží udržet" },
+      { question: "Co se rozumí pod pojmem „lombardní sazba“?", options: ["Sazba, za kterou si banky mohou půjčovat od ČNB proti zajištění", "Daň z dividend", "Repo sazba", "Výměna hotovosti za devizy"], answerText: "Sazba, za kterou si banky mohou půjčovat od ČNB proti zajištění" },
+      { question: "Co bývá hlavní příčinou nedobrovolné nezaměstnanosti?", options: ["Nedostatečná poptávka po práci", "Dobrovolná nečinnost", "Odborová činnost", "Příliš vysoká úroveň vzdělání"], answerText: "Nedostatečná poptávka po práci" },
+      { question: "Jaký je cíl měnové politiky v boji proti inflaci?", options: ["Snížit deflátor", "Zvýšit nominální HDP", "Podpořit export", "Stabilizovat cenovou hladinu"], answerText: "Stabilizovat cenovou hladinu" },
+      { question: "Co způsobuje posun rovnováhy v modelu AS-AD?", options: ["Posun LAS křivky", "Změna v AD nebo SAS", "Stabilita daní", "Změna technologického pokroku"], answerText: "Změna v AD nebo SAS" },
+      { question: "Který z následujících příjmů je typickým příjmem státního rozpočtu?", options: ["Přímá investice", "Daně z příjmů a DPH", "Zahraniční vývoz", "Spotřeba domácností"], answerText: "Daně z příjmů a DPH" },
+      { question: "Co je účelem vyrovnané fiskální politiky?", options: ["Tvorba měnové politiky", "Udržení rovnováhy mezi příjmy a výdaji státu", "Rychlý růst výdajů", "Zvýšení exportu"], answerText: "Udržení rovnováhy mezi příjmy a výdaji státu" },
+      { question: "Co je dumping v mezinárodním obchodě?", options: ["Nadměrná regulace exportu", "Nelegální dovoz", "Prodej zboží v zahraničí na nižší, než výrobní cenu", "Zastavení vývozu"], answerText: "Prodej zboží v zahraničí na nižší, než výrobní cenu" },
+      { question: "Co je důsledkem dlouhodobé vysoké inflace?", options: ["Zvyšování úspor", "Růst exportu", "Eroze důvěry v měnu", "Stabilita měny"], answerText: "Eroze důvěry v měnu" },
+      { question: "Co platí v dlouhodobém období pro křivku LAS?", options: ["Je klesající", "Se posunuje s inflací", "Je vertikální", "Je horizontální"], answerText: "Je vertikální" },
+      { question: "Který ukazatel nejlépe vyjadřuje problém s nezaměstnaností?", options: ["Průměrná mzda", "Počet zaměstnaných v národním hospodářství", "Počet živnostníků", "Míra nezaměstnanosti"], answerText: "Míra nezaměstnanosti" }
     ];
 
     function shuffle(array) {
@@ -276,7 +452,13 @@
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        quizData = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === originalData.length) {
+          quizData = parsed;
+        } else {
+          quizData = generateQuizData();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(quizData));
+        }
       } catch {
         quizData = generateQuizData();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(quizData));
@@ -286,9 +468,11 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(quizData));
     }
 
-    const total = quizData.length;
+    const total = quizData.length; // 162
     let currentIndex = 0;
     const userAnswers = new Array(total).fill(null);
+    let score = 0;
+    let wrongAnswers = []; // sem budeme ukládat indexy otázek, na které bylo odpovězeno špatně
 
     const feedbackEl = document.getElementById('feedback');
     const questionEl = document.getElementById('question');
@@ -300,6 +484,14 @@
     const jumpBtn = document.getElementById('jump-btn');
     const shuffleBtn = document.getElementById('shuffle-btn');
     const progressContainer = document.getElementById('progress-container');
+    const scoreEl = document.getElementById('score');
+    const correctCountEl = document.getElementById('correct-count');
+    const wrongCountEl   = document.getElementById('wrong-count');
+    const wrongListEl = document.getElementById('wrong-list');
+wrongCountEl.addEventListener('click', () => {
+  wrongListEl.style.display = wrongListEl.style.display === 'none' ? 'block' : 'none';
+});
+
     const themeToggle = document.getElementById('theme-toggle');
 
     // Inicializace progress baru
@@ -323,12 +515,32 @@
       });
     }
 
+    // Aktualizace skóre zobrazeného
+    function updateScore() {
+  scoreEl.textContent = `Skóre: ${score}/${total}`;
+
+  // spočítat, kolik otázek už bylo zodpovězeno
+  const answeredCount = userAnswers.filter(a => a !== null).length;
+  const wrongCount    = answeredCount - score;
+
+  correctCountEl.textContent = `SPRÁVNĚ: ${score}`;
+  wrongCountEl.textContent   = `ŠPATNĚ: ${wrongCount}`;
+}
+
+
     jumpInput.setAttribute('max', total);
+
+    function highlightButton(btn) {
+      btn.style.background = 'var(--btn-active-bg)';
+      btn.style.color = 'var(--btn-active-color)';
+      btn.style.borderColor = 'var(--btn-active-bg)';
+    }
 
     function loadQuestion() {
       feedbackEl.style.display = 'none';
       clearState();
       updateProgressBar();
+      updateScore();
 
       const q = quizData[currentIndex];
       qNumberEl.textContent = `Otázka ${currentIndex + 1}/${total}`;
@@ -357,12 +569,24 @@
     }
 
     function selectOption(btn, idx) {
+      // Pokud už byla otázka odpovězena, nic neměníme
+      if (userAnswers[currentIndex] !== null) return;
+
       userAnswers[currentIndex] = idx;
-      revealAnswer(idx, btn);
+      const correctIdx = quizData[currentIndex].answer;
+      if (idx === correctIdx) score++;
+      revealAnswer(idx);
       updateProgressBar();
+      updateScore();
+      // pokud odpověď byla špatná, uložíme si index této otázky (jen pokud tam ještě není)
+if (idx !== correctIdx && !wrongAnswers.includes(currentIndex)) {
+  wrongAnswers.push(currentIndex);
+  updateWrongList();
+}
+
     }
 
-    function revealAnswer(selectedIdx, clickedBtn = null) {
+    function revealAnswer(selectedIdx) {
       const correctIdx = quizData[currentIndex].answer;
       Array.from(optionsEl.children).forEach((optEl, idx) => {
         optEl.style.pointerEvents = 'none';
@@ -384,7 +608,29 @@
       nextBtn.style.display = 'inline-block';
     }
 
+    function updateWrongList() {
+  const listEl = document.getElementById('wrong-list');
+  listEl.innerHTML = ''; // vyčistíme dosavadní obsah
+
+  wrongAnswers.forEach(i => {
+    const div = document.createElement('div');
+    div.classList.add('wrong-item');
+    // zobrazíme číslo otázky a text (podle potřeby lze upravit jen číslo)
+    div.textContent = `${i + 1}. ${quizData[i].question}`;
+    // po kliknutí na položku se přepneme na tu otázku
+    div.addEventListener('click', () => {
+      currentIndex = i;
+      loadQuestion();
+      // po kliknutí necháme panel zavřený (nebo můžete nechat otevřený)
+      // listEl.style.display = 'none';
+    });
+    listEl.appendChild(div);
+  });
+}
+
+
     prevBtn.addEventListener('click', () => {
+      highlightButton(prevBtn);
       if (currentIndex > 0) {
         currentIndex--;
         loadQuestion();
@@ -392,12 +638,13 @@
     });
 
     nextBtn.addEventListener('click', () => {
+      highlightButton(nextBtn);
       if (currentIndex < total - 1) {
         currentIndex++;
         loadQuestion();
       } else {
         feedbackEl.style.display = 'none';
-        questionEl.textContent = 'Kvíz dokončen!';
+        questionEl.textContent = `Kvíz dokončen! Konečné skóre: ${score}/${total}`;
         qNumberEl.textContent = '';
         clearState();
         prevBtn.style.display = 'none';
@@ -406,6 +653,7 @@
     });
 
     jumpBtn.addEventListener('click', () => {
+      highlightButton(jumpBtn);
       const val = parseInt(jumpInput.value, 10);
       if (!isNaN(val) && val >= 1 && val <= total) {
         currentIndex = val - 1;
@@ -415,17 +663,19 @@
     });
 
     shuffleBtn.addEventListener('click', () => {
+      highlightButton(shuffleBtn);
       localStorage.removeItem(STORAGE_KEY);
       location.reload();
     });
 
     // Přepnutí tématu
     themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
       document.body.classList.toggle('dark-mode');
-      if (document.body.classList.contains('dark-mode')) {
-        themeToggle.textContent = '☀️';
-      } else {
+      if (document.body.classList.contains('light-mode')) {
         themeToggle.textContent = '🌙';
+      } else {
+        themeToggle.textContent = '☀️';
       }
     });
 
