@@ -5,34 +5,219 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Interaktivní kvízová hra</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    #game-container { position: relative; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 500px; max-width: 95%; padding: 80px 20px 20px; text-align: center; }
-    #feedback { position: absolute; top: 10px; left: 0; right: 0; font-size: 2.5rem; font-weight: bold; color: #00aa00; display: none; }
-    #q-number { position: absolute; top: 60px; right: 15px; font-size: 1.2rem; }
-    #question { font-size: 1.3rem; margin: 50px 0 25px; font-weight: bold; }
-    #options { display: block; }
-    .option { background: #fff; border: 2px solid #000; padding: 15px; border-radius: 4px; cursor: pointer; transition: background 0.2s; text-align: left; font-size: 1.1rem; margin: 10px 0; }
-    .option:hover { background: #f0f0f0; }
-    .correct { background: #00ff00 !important; color: #000; }
-    .wrong { background: #ff0000 !important; border-color: #cc0000 !important; color: #000; }
-    #controls { margin-top: 20px; }
-    #prev-btn, #next-btn { padding: 10px 20px; font-size: 1rem; border: none; border-radius: 4px; margin: 0 5px; cursor: pointer; }
-    #prev-btn { background: #757575; color: #fff; }
-    #next-btn { background: #2196f3; color: #fff; }
+    :root {
+      --bg-body: #f5f5f5;
+      --bg-container: #fff;
+      --color-text: #000;
+      --option-bg: #fff;
+      --option-border: #000;
+      --option-hover: #f0f0f0;
+      --btn-bg: transparent;
+      --btn-border: #2196f3;
+      --btn-color: #2196f3;
+      --progress-bg: #ddd;
+      --progress-completed: #2196f3;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-body);
+      color: var(--color-text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+    #game-container {
+      position: relative;
+      background: var(--bg-container);
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 500px;
+      max-width: 95%;
+      padding: 80px 20px 20px;
+      text-align: center;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    #feedback {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #00aa00;
+      display: none;
+    }
+    /* Přesun nápisu Otázka x/… a ovládacích prvků doprostřed */
+    #q-controls {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #q-number {
+      font-weight: bold;
+    }
+    #jump-input {
+      width: 50px;
+      padding: 2px;
+      font-size: 1rem;
+      text-align: center;
+    }
+    #jump-btn,
+    #shuffle-btn,
+    #prev-btn,
+    #next-btn {
+      padding: 5px 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: 1px solid var(--btn-border);
+      border-radius: 4px;
+      background: var(--btn-bg);
+      color: var(--btn-color);
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+    }
+    #question {
+      font-size: 1.3rem;
+      margin: 50px 0 25px;
+      font-weight: bold;
+    }
+    #options {
+      display: block;
+    }
+    .option {
+      background: var(--option-bg);
+      border: 2px solid var(--option-border);
+      padding: 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.3s, color 0.3s;
+      text-align: left;
+      font-size: 1.1rem;
+      margin: 10px 0;
+      position: relative;
+      color: var(--color-text);
+    }
+    .option:hover {
+      background: var(--option-hover);
+    }
+    .correct {
+      background: #00ff00 !important;
+      color: #000;
+      border-color: #00aa00 !important;
+      animation: glow 0.8s ease-in-out;
+    }
+    .wrong {
+      background: #ff0000 !important;
+      border-color: #cc0000 !important;
+      color: #000;
+      animation: shake 0.4s ease-in-out;
+    }
+    /* Animace pro špatnou odpověď (otřes) */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    /* Animace pro správnou odpověď (bílé rozzáření okraje) */
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px white; }
+      50% { box-shadow: 0 0 20px white; }
+      100% { box-shadow: 0 0 5px white; }
+    }
+
+    #progress-container {
+      display: flex;
+      gap: 2px;
+      margin-top: 15px;
+      height: 10px;
+    }
+    #progress-container .segment {
+      flex: 1;
+      background: var(--progress-bg);
+      border-radius: 2px;
+      transition: background 0.3s;
+    }
+    #progress-container .segment.completed {
+      background: var(--progress-completed);
+    }
+
+    #controls {
+      margin-top: 20px;
+    }
+    /* Tlačítko přepínače tématu */
+    #theme-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-color);
+      font-size: 1.2rem;
+      padding: 5px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    /* DARK MODE STYLY */
+    body.dark-mode {
+      --bg-body: #121212;
+      --bg-container: #1e1e1e;
+      --color-text: #fff;
+      --option-bg: #2c2c2c;
+      --option-border: #fff;
+      --option-hover: #3a3a3a;
+      --btn-bg: transparent;
+      --btn-border: #fff;
+      --btn-color: #fff;
+      --progress-bg: #555;
+      --progress-completed: #90caf9;
+    }
+    body.dark-mode #feedback {
+      color: #a5d6a7;
+    }
+    body.dark-mode .correct {
+      background: #4caf50 !important;
+      color: #fff;
+      border-color: #388e3c !important;
+    }
+    body.dark-mode .wrong {
+      background: #e57373 !important;
+      border-color: #d32f2f !important;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
   <div id="game-container">
+    <button id="theme-toggle">🌙</button>
     <div id="feedback"></div>
-    <div id="q-number"></div>
+    <div id="q-controls">
+      <div id="q-number"></div>
+      <input id="jump-input" type="number" min="1" />
+      <button id="jump-btn">Přejít</button>
+      <button id="shuffle-btn">Proházet otázky</button>
+    </div>
     <div id="question"></div>
     <div id="options"></div>
+    <div id="progress-container"></div>
     <div id="controls">
       <button id="prev-btn">Zpět</button>
       <button id="next-btn">Další</button>
     </div>
   </div>
+
   <script>
+    const STORAGE_KEY = 'quizDataOrder';
     const originalData = [
       { question: "Kdo je autorem známého citátu \"Inflace je vždy a všude měnový jev\"?", options: ["M. Friedman", "J. M. Keynes", "A. Smith", "K. Marx"], answerText: "M. Friedman" },
       { question: "Jaký je cíl restriktivní měnové politiky?", options: ["Zvýšit veřejné výdaje", "Zvýšit export", "Omezit inflaci a přehřátí ekonomiky", "Snížit nezaměstnanost"], answerText: "Omezit inflaci a přehřátí ekonomiky" },
@@ -64,7 +249,6 @@
       { question: "Který cíl nepatří mezi stabilizační funkce státu?", options: ["Cenová stabilita", "Růst HDP", "Zvýšení nerovnosti", "Vysoká zaměstnanost"], answerText: "Zvýšení nerovnosti" },
       { question: "Který z těchto typů nezaměstnanosti je způsoben pohybem pracovníků mezi zaměstnáními?", options: ["Frikční", "Strukturální", "Cyklická", "Skrytá"], answerText: "Frikční" },
       { question: "Jaký dopad má zvýšení daní na agregátní poptávku?", options: ["Poptávka se zvyšuje", "Poptávka roste jen u exportérů", "Nemá žádný vliv", "Poptávka se snižuje"], answerText: "Poptávka se snižuje" }
-
     ];
 
     function shuffle(array) {
@@ -74,13 +258,37 @@
       }
     }
 
-    const quizData = originalData.map(item => {
-      const opts = [...item.options]; shuffle(opts);
-      return { question: item.question, options: opts, answer: opts.indexOf(item.answerText) };
-    }); shuffle(quizData);
+    function generateQuizData() {
+      const data = originalData.map(item => {
+        const opts = [...item.options];
+        shuffle(opts);
+        return {
+          question: item.question,
+          options: opts,
+          answer: opts.indexOf(item.answerText)
+        };
+      });
+      shuffle(data);
+      return data;
+    }
 
-    let currentIndex = 0;
+    let quizData;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        quizData = JSON.parse(saved);
+      } catch {
+        quizData = generateQuizData();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(quizData));
+      }
+    } else {
+      quizData = generateQuizData();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(quizData));
+    }
+
     const total = quizData.length;
+    let currentIndex = 0;
+    const userAnswers = new Array(total).fill(null);
 
     const feedbackEl = document.getElementById('feedback');
     const questionEl = document.getElementById('question');
@@ -88,13 +296,44 @@
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const qNumberEl = document.getElementById('q-number');
+    const jumpInput = document.getElementById('jump-input');
+    const jumpBtn = document.getElementById('jump-btn');
+    const shuffleBtn = document.getElementById('shuffle-btn');
+    const progressContainer = document.getElementById('progress-container');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    // Inicializace progress baru
+    function initProgressBar() {
+      for (let i = 0; i < total; i++) {
+        const seg = document.createElement('div');
+        seg.classList.add('segment');
+        seg.dataset.index = i;
+        progressContainer.appendChild(seg);
+      }
+    }
+
+    // Aktualizace progress baru podle userAnswers[]
+    function updateProgressBar() {
+      Array.from(progressContainer.children).forEach((seg, idx) => {
+        if (userAnswers[idx] !== null) {
+          seg.classList.add('completed');
+        } else {
+          seg.classList.remove('completed');
+        }
+      });
+    }
+
+    jumpInput.setAttribute('max', total);
 
     function loadQuestion() {
       feedbackEl.style.display = 'none';
       clearState();
+      updateProgressBar();
+
       const q = quizData[currentIndex];
       qNumberEl.textContent = `Otázka ${currentIndex + 1}/${total}`;
       questionEl.textContent = `${currentIndex + 1}. ${q.question}`;
+
       q.options.forEach((opt, idx) => {
         const btn = document.createElement('div');
         btn.classList.add('option');
@@ -102,34 +341,96 @@
         btn.addEventListener('click', () => selectOption(btn, idx));
         optionsEl.appendChild(btn);
       });
+
       prevBtn.style.display = currentIndex > 0 ? 'inline-block' : 'none';
+      const prevAns = userAnswers[currentIndex];
+      if (prevAns !== null) {
+        revealAnswer(prevAns);
+      }
     }
 
     function clearState() {
       nextBtn.style.display = 'none';
-      while (optionsEl.firstChild) optionsEl.removeChild(optionsEl.firstChild);
+      while (optionsEl.firstChild) {
+        optionsEl.removeChild(optionsEl.firstChild);
+      }
     }
 
     function selectOption(btn, idx) {
+      userAnswers[currentIndex] = idx;
+      revealAnswer(idx, btn);
+      updateProgressBar();
+    }
+
+    function revealAnswer(selectedIdx, clickedBtn = null) {
       const correctIdx = quizData[currentIndex].answer;
-      if (idx === correctIdx) {
-        btn.classList.add('correct'); feedbackEl.textContent = 'SPRÁVNĚ'; feedbackEl.style.display = 'block';
+      Array.from(optionsEl.children).forEach((optEl, idx) => {
+        optEl.style.pointerEvents = 'none';
+        if (idx === correctIdx) {
+          optEl.classList.add('correct');
+        }
+        if (idx === selectedIdx && selectedIdx !== correctIdx) {
+          optEl.classList.add('wrong');
+        }
+      });
+      if (selectedIdx === correctIdx) {
+        feedbackEl.textContent = 'SPRÁVNĚ';
+        feedbackEl.style.color = '#00aa00';
       } else {
-        btn.classList.add('wrong'); optionsEl.children[correctIdx].classList.add('correct');
+        feedbackEl.textContent = 'ŠPATNĚ';
+        feedbackEl.style.color = '#cc0000';
       }
-      Array.from(optionsEl.children).forEach(opt => opt.style.pointerEvents = 'none');
+      feedbackEl.style.display = 'block';
       nextBtn.style.display = 'inline-block';
     }
 
     prevBtn.addEventListener('click', () => {
-      if (currentIndex > 0) { currentIndex--; loadQuestion(); }
+      if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+      }
     });
 
     nextBtn.addEventListener('click', () => {
-      if (currentIndex < total - 1) { currentIndex++; loadQuestion(); }
-      else { feedbackEl.style.display = 'none'; questionEl.textContent = 'Kvíz dokončen!'; qNumberEl.textContent = ''; clearState(); prevBtn.style.display = 'none'; }
+      if (currentIndex < total - 1) {
+        currentIndex++;
+        loadQuestion();
+      } else {
+        feedbackEl.style.display = 'none';
+        questionEl.textContent = 'Kvíz dokončen!';
+        qNumberEl.textContent = '';
+        clearState();
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+      }
     });
 
+    jumpBtn.addEventListener('click', () => {
+      const val = parseInt(jumpInput.value, 10);
+      if (!isNaN(val) && val >= 1 && val <= total) {
+        currentIndex = val - 1;
+        loadQuestion();
+        jumpInput.value = '';
+      }
+    });
+
+    shuffleBtn.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    });
+
+    // Přepnutí tématu
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        themeToggle.textContent = '☀️';
+      } else {
+        themeToggle.textContent = '🌙';
+      }
+    });
+
+    // Inicializace
+    initProgressBar();
     loadQuestion();
   </script>
 </body>
